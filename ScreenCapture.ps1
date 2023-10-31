@@ -134,7 +134,7 @@ function main_loop($data){
 
 Write-Host "---------------------------------"
 Write-Host "ScreenCapture.ps1"
-Write-Host "Created by Robin Sharma (4018645)"
+Write-Host "Created by mikeelio"
 Write-Host "---------------------------------"
 Write-Host "Please Choose the following: 1. Automatic Sort (Sunday to Friday) | 2. Manual Sort"
 $user_selection=Read-Host -Prompt " "
