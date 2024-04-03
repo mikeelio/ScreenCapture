@@ -1,155 +1,105 @@
-#Created by mikeelio
-#If it breaks, dont touch it cause yall gonna mess it up more than I can fix it
+<#
+Title:         ScreenCapture Powershell
+Author: 	   Mikeelio (Robin Sharma)
+Date Created:  October 31, 2023  	     
+Description:   This program takes a screenshot every 1 Hour from the time inputted by the user. The screenshots are saved to a location set by the user. The Program is set to run till 2am unless it is changed.
+
+NOTE: 		 If it breaks, dont touch it cause yall gonna mess it up more than I can fix it
+ #>
+
+
+#variable declare
+$data = New-Object System.Collections.ArrayList(8)
+$last_screenshot = "No Screenshot Taken Yet"
+$h=0
+$i=0
+$l=0
+$m=0
+
+# Location Paths
+$user=$Env:UserName
+$current_date=GET-DATE -Format 'MM-dd-yy'
+$screenshot_path = "C:\Users\${user}\Desktop\Screenshots\${current_date}"
+
 [Reflection.Assembly]::LoadWithPartialName("System.Drawing")
 [Environment]::UserName
+Clear-Host
 
-
-#Array Declare
-$sunday_schedule=New-Object System.Collections.ArrayList(8)
-$mon_fri_schedule=New-Object System.Collections.ArrayList(8)
-
-
-#variable stuff
-$user=$Env:UserName
-
-$data = New-Object System.Collections.ArrayList(8)
-
-
-<#
-The variables listed below can be changed to the users preference. The default info below are the ones that can be changed at the moment. More to come later on.
-
-#>
-$save_to_location = "C:\Users\${user}\Desktop\Screenshots\${current_date}\screenshot_${l}.png"
-$screenshot_path = "C:\Users\${user}\Desktop\Screenshots\${current_date}"
-$sunday_schedule = "15:10","16:10","17:10","18:10","19:10","20:10","21:10"
-$mon_fri_schedule = "16:10","17:10","18:10","19:10","20:10","21:10","22:10"
-
-
-#functions
-function clear_screen(){
+#Asks User for the Start Time. It then checks if the user has entered the time correctly based on thr format.
+$Starttime = Read-Host -Prompt 'Input Start time (ex. 17:10)'
+while($Starttime.length -ne 5 -or $Starttime.length -gt 5){
 	Clear-Host
+	$Starttime = Read-Host -Prompt "You put in (${Starttime}). Please Input Correct Start time (ex. 17:10)"
 }
+Clear-Host
 
-function screenshot([Drawing.Rectangle]$bounds, $path) {
-				
-	$bmp = New-Object Drawing.Bitmap $bounds.width, $bounds.height
-	$graphics = [Drawing.Graphics]::FromImage($bmp)
 
-	$graphics.CopyFromScreen($bounds.Location, [Drawing.Point]::Empty, $bounds.size)
+#Start time is split into Hour/Min and then creates an array where the hour is increased by 1 hour. It also checks if the minutes is less than 10 which then adds a 0 to the front (ex. 01:03 instead of 01:3)
+$split_time =$Starttime.Split(":")
+$hour = [int]$split_time[0]
+$min = [int]$split_time[1]
 
-	$bmp.Save($path)
+while($h -ne 8){
+	$hour++
+	if ($hour -eq 24){
+		$hour=00
+	}
 
-	$graphics.Dispose()
-	$bmp.Dispose()
-}
-
-function automatic_sort($sun, $mon_fri){
-	$day = Get-Date -Format "dddd"
+	if ($min -le 9 ){
+		$data.Add("${hour}:0${min}") 
+	}
 	
-	if ($day -eq "Sunday"){
-		Write-host "Running in Sunday Sort Schedule"
-		Write-host "Current Times for screenshots are ${sunday_schedule}"
-		Write-host "Starting up ScreenCapture sequence. Please keep the window set to Overview at all times to capture the numbers"
-		Start-Sleep -Seconds 2
-		clear_screen
-		main_loop $sunday_schedule
-	}
-	elseif ($day -eq "Saturday"){
-		Write-host "Switching to Manual Mode due to saturday sort not being a constant scheduled shift. Please stand by!!"
-		Start-Sleep -Seconds 2
-		clear_screen
-		manual_sort
-	}
 	else{
-		Write-host "Running in Monday - Friday Sort Schedule"
-		Write-host "Current Times for screenshots are ${mon_fri_schedule}"
-		Write-host "Starting up ScreenCapture sequence. Please keep the window set to Overview at all times to capture the numbers"
-		Start-Sleep -Seconds 2
-		clear_screen
-		main_loop $mon_fri_schedule
-	}
-	
-	
-}
-function manual_sort(){
-	$Starttime = Read-Host -Prompt 'Input Start time'
-	$split_time =$Starttime.Split(":")
-	$hour = [int]$split_time[0]
-	$min = [int]$split_time[1]
-	$i=0
-
-	while($i -ne 8){
-		$hour++
-		if ($hour -eq 24){
-			$hour=00
-		}
 		$data.Add("${hour}:${min}" ) 
-		$i++
 	}
-	Write-host "Starting up ScreenCapture sequence. Please keep the window set to Overview at all times to capture the numbers"
-	Start-Sleep -Seconds 2
-	clear_screen
-	main_loop $data
+	$h++
 }
 
-function main_loop($data){
-	
-	$current_date=GET-DATE -Format 'MM-dd-yy'
+#Checks if the current time is in the array.If yes then it will take a screenshot of whatever is on the screen.
+while ($l -ne 8){
+	foreach ($item in $data) {
+		$current_time=""
+		$current_time=GET-DATE -Format 'HH:mm'
+		Write-Host "Last Screenshot taken at: ${last_screenshot}"
+		Write-Host "Current Time is: ${current_time}"
+		Write-Host "Checking if the time is $item"
+		if ($current_time -eq $item){
+			Write-Host "Taking Screenshot at ${current_time}"
+			$last_screenshot = "${current_time}"
+			function screenshot([Drawing.Rectangle]$bounds, $path) {
+				$bmp = New-Object Drawing.Bitmap $bounds.width, $bounds.height
+				$graphics = [Drawing.Graphics]::FromImage($bmp)
 
-	$i=0
-	$l=0
-	$m=0
+				$graphics.CopyFromScreen($bounds.Location, [Drawing.Point]::Empty, $bounds.size)
 
-	while ($l -ne 8){
-		foreach ($item in $data) {
-			$current_time=""
-			$current_time=GET-DATE -Format 'HH:mm'
-			Write-Host "Current Time is: ${current_time}"
-			Write-Host "Checking if the time is $item"
-			if ($current_time -eq $item){
-				Write-Host "Taking Screenshot at ${current_time}"
-				$bounds = [Drawing.Rectangle]::FromLTRB(0, 0, 1920, 1080)			
-				$current_time=GET-DATE -Format 'HH:mm'
-				if (Test-Path -Path $screenshot_path) {
-					Write-Host""
-				} else {
-					md $screenshot_path
-				}		
-				Start-Sleep -Seconds 3
-				screenshot $bounds $save_to_location
-				Write-Host "Entering Sleep for 2 min and 30 Seconds"
-				Start-Sleep -Seconds 150
-				clear_screen
-				$l++
+				$bmp.Save($path)
+
+				$graphics.Dispose()
+				$bmp.Dispose()
 			}
-			if ($current_time -eq "01:00" -OR $current_time -eq "1:00"){
-				exit
-			}			
-		   Start-Sleep -Seconds 3
-		   $i++
+
+			$bounds = [Drawing.Rectangle]::FromLTRB(0, 0, 1920, 1080)
+			
+			$current_time=GET-DATE -Format 'HH:mm'
+			if (Test-Path -Path $screenshot_path) {
+				Write-Host""
+			} else {
+				md $screenshot_path
+			}
+			
+			Start-Sleep -Seconds 3
+			screenshot $bounds "${screenshot_path}\screenshot_${l}.png"
+			Write-Host "Entering Sleep for 2 min and 30 Seconds"
+			Start-Sleep -Seconds 150
+			Clear-Host
+			$l++
 		}
-	} 	
+		if ($current_time -eq "02:00" -OR $current_time -eq "2:00"){
+			exit
+		}	
+	   Start-Sleep -Seconds 3
+	   Clear-Host
+	   $i++
+	}
 }
-
-
-Write-Host "----------------------------------"
-Write-Host "ScreenCapture.ps1"
-Write-Host "Created by mikeelio"
-Write-Host "----------------------------------"
-Write-Host "Please Choose the following: 1. Automatic Sort (Sunday to Friday) | 2. Manual Sort"
-$user_selection=Read-Host -Prompt " "
-
-if ($user_selection -eq 1) {
-	automatic_sort 
-}
-elseif ($user_selection -eq 2){
-	manual_sort
-}
-
-
-
-
-
-
-
 
