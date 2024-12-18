@@ -11,10 +11,11 @@ NOTE: 		 If it breaks, dont touch it cause yall gonna mess it up more than I can
 #variable declare
 $data = New-Object System.Collections.ArrayList(8)
 $last_screenshot = "No Screenshot Taken Yet"
-$h=0
+$current_time=""
+$h=0 #For Time Array Setup
 $i=0
 $l=0
-$m=0
+
 
 # Location Paths
 $user=$Env:UserName
@@ -36,19 +37,23 @@ Clear-Host
 
 #Start time is split into Hour/Min and then creates an array where the hour is increased by 1 hour. It also checks if the minutes is less than 10 which then adds a 0 to the front (ex. 01:03 instead of 01:3)
 $split_time =$Starttime.Split(":")
-$hour = [int]$split_time[0]
+$hour_int = [int]$split_time[0]
 $min = [int]$split_time[1]
 
 while($h -ne 8){
-	$hour++
-	if ($hour -eq 24){
-		$hour=00
+	$hour_int++
+	$hour = $hour_int
+	if ($hour_int -eq 24){
+		$hour_int=0
+	}
+	if ($hour_int -lt 10){
+		$hour="0${hour_int}"
 	}
 
+	#Checks if the minutes are less than 9.
 	if ($min -le 9 ){
 		$data.Add("${hour}:0${min}") 
 	}
-	
 	else{
 		$data.Add("${hour}:${min}" ) 
 	}
@@ -58,11 +63,12 @@ while($h -ne 8){
 #Checks if the current time is in the array.If yes then it will take a screenshot of whatever is on the screen.
 while ($l -ne 8){
 	foreach ($item in $data) {
-		$current_time=""
-		$current_time=GET-DATE -Format 'HH:mm'
+		$current_time="02:00"#GET-DATE -Format 'HH:mm'
 		Write-Host "Last Screenshot taken at: ${last_screenshot}"
 		Write-Host "Current Time is: ${current_time}"
 		Write-Host "Checking if the time is $item"
+
+		#Check if the current time is equal to $item which is taking information from $data.
 		if ($current_time -eq $item){
 			Write-Host "Taking Screenshot at ${current_time}"
 			$last_screenshot = "${current_time}"
@@ -82,9 +88,9 @@ while ($l -ne 8){
 			
 			$current_time=GET-DATE -Format 'HH:mm'
 			if (Test-Path -Path $screenshot_path) {
-				Write-Host""
+				Write-Host"Screenshot successful."
 			} else {
-				md $screenshot_path
+				mkdir $screenshot_path
 			}
 			
 			Start-Sleep -Seconds 3
@@ -94,7 +100,7 @@ while ($l -ne 8){
 			Clear-Host
 			$l++
 		}
-		if ($current_time -eq "02:00" -OR $current_time -eq "2:00"){
+		if ($current_time -eq "04:00"){
 			exit
 		}	
 	   Start-Sleep -Seconds 3
