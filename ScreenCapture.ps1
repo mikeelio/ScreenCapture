@@ -14,7 +14,7 @@ $last_screenshot = "No Screenshot Taken Yet"
 $current_time=""
 $h=0 #For Time Array Setup
 $i=0
-$l=0
+
 
 
 # Location Paths
@@ -60,13 +60,14 @@ while($h -ne 8){
 	$h++
 }
 
-#Checks if the current time is in the array.If yes then it will take a screenshot of whatever is on the screen.
-while ($l -ne 8){
+#Checks if the current time is in the array.If yes then it will take a screenshot of whatever is on the screen. Note: Need to add where it focuses on a certain window.
+while ($i -ne 8){
 	foreach ($item in $data) {
-		$current_time="02:00"#GET-DATE -Format 'HH:mm'
+		$current_time= GET-DATE -Format 'HH:mm'
+		Clear-Host
 		Write-Host "Last Screenshot taken at: ${last_screenshot}"
 		Write-Host "Current Time is: ${current_time}"
-		Write-Host "Checking if the time is $item"
+		Write-Host "Checking if the time is: $item"
 
 		#Check if the current time is equal to $item which is taking information from $data.
 		if ($current_time -eq $item){
@@ -88,17 +89,18 @@ while ($l -ne 8){
 			
 			$current_time=GET-DATE -Format 'HH:mm'
 			if (Test-Path -Path $screenshot_path) {
-				Write-Host"Screenshot successful."
+				Write-Host "Screenshot successful."
 			} else {
-				mkdir $screenshot_path
+				mk $screenshot_path
+				Write-Host "Folder does not exist. Folder was created on desktop"
 			}
 			
 			Start-Sleep -Seconds 3
-			screenshot $bounds "${screenshot_path}\screenshot_${l}.png"
+			$screenshot_time = GET-DATE -Format 'HH_mm'
+			screenshot $bounds "${screenshot_path}\screenshot_${screenshot_time}.png"
 			Write-Host "Entering Sleep for 2 min and 30 Seconds"
 			Start-Sleep -Seconds 150
 			Clear-Host
-			$l++
 		}
 		if ($current_time -eq "04:00"){
 			exit
